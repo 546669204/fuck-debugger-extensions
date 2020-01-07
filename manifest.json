@@ -1,0 +1,32 @@
+{
+  "name": "fuck-debugger-extensions",
+  "version": "1.0.0",
+  "description": "fuck-debugger-extensions",
+  "permissions": ["storage", "activeTab", "tabs", "debugger", "storage"],
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "run_at": "document_start",
+      "js": ["inject.js"],
+      "all_frames": true
+    }
+  ],
+  "commands": {
+    "attach-debugger": {
+      "suggested_key": {
+        "default": "Alt+Shift+D"
+      },
+      "description": "Attach"
+    }
+  },
+  "manifest_version": 2,
+  "content_security_policy":"script-src 'self' 'unsafe-inline' 'sha256-4r8oXYfLSiOiBjDTYqivYfVGF6kfXs0MRKRcODSrCG0='; object-src 'self'"
+
+}
