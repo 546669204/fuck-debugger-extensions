@@ -22,6 +22,13 @@ Having this plugin can solve the problem invisibly.
 
 ## install and use
 
+### download
+```
+cd ~
+git clone https://github.com/546669204/fuck-debugger-extensions.git
+
+```
+
 ### install
 
 ```markdown

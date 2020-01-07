@@ -20,6 +20,13 @@
 
 ## 安装和使用
 
+### 下载
+```
+cd ~
+git clone https://github.com/546669204/fuck-debugger-extensions.git
+
+```
+
 ### 安装  
 
 ```markdown  
