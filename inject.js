@@ -2,16 +2,49 @@ const script = document.createElement('script');
 
 
 function core(e) {
-  console.log("inject start!",e)
+  console.log("inject start!", e)
 
   if (e["config-hook-debugger"]) {
-    var oldFunctionConstructor = Function.prototype.constructor;
-    Function.prototype.constructor = function (code) {
-      code = code.replace(/debugger/g, "");
-      return oldFunctionConstructor.call(this, code)
+
+    function Closure(injectFunction) {
+      return function () {
+        if (!arguments.length) return injectFunction.apply(this, arguments)
+        arguments[arguments.length - 1] = arguments[arguments.length - 1].replace(/debugger/g, "");
+        return injectFunction.apply(this, arguments)
+      }
     }
+
+    var oldFunctionConstructor = Function.prototype.constructor;
+    Function.prototype.constructor = Closure(oldFunctionConstructor)
     //fix native function
     Function.prototype.constructor.toString = oldFunctionConstructor.toString.bind(oldFunctionConstructor);
+
+    var oldEval = eval;
+    eval = Closure(oldEval)
+    //fix native function
+    eval.toString = oldEval.toString.bind(oldEval);
+
+
+    // hook GeneratorFunction
+    var oldGeneratorFunctionConstructor = Object.getPrototypeOf(function* () {}).constructor
+    var newGeneratorFunctionConstructor = Closure(oldGeneratorFunctionConstructor)
+    newGeneratorFunctionConstructor.toString = oldGeneratorFunctionConstructor.toString.bind(oldGeneratorFunctionConstructor);
+    Object.defineProperty(oldGeneratorFunctionConstructor.prototype, "constructor", {
+      value: newGeneratorFunctionConstructor,
+      writable: false,
+      configurable: true
+    })
+
+    // hook Async Function 
+    var oldAsyncFunctionConstructor = Object.getPrototypeOf(async function () {}).constructor
+    var newAsyncFunctionConstructor = Closure(oldAsyncFunctionConstructor)
+    newAsyncFunctionConstructor.toString = oldAsyncFunctionConstructor.toString.bind(oldAsyncFunctionConstructor);
+    Object.defineProperty(oldAsyncFunctionConstructor.prototype, "constructor", {
+      value: newAsyncFunctionConstructor,
+      writable: false,
+      configurable: true
+    })
+
   }
   if (e["config-hook-pushState"]) {
     // hook pushState
