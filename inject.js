@@ -1,7 +1,8 @@
 const script = document.createElement('script');
 
 
-function core(e) {
+function core(e,window) {
+  var globalConfig = e;
   console.log("inject start!", e)
 
   if (e["config-hook-debugger"]) {
@@ -14,15 +15,21 @@ function core(e) {
       }
     }
 
-    var oldFunctionConstructor = Function.prototype.constructor;
-    Function.prototype.constructor = Closure(oldFunctionConstructor)
+
+    var oldFunctionConstructor = window.Function.prototype.constructor;
+    window.Function.prototype.constructor = Closure(oldFunctionConstructor)
     //fix native function
-    Function.prototype.constructor.toString = oldFunctionConstructor.toString.bind(oldFunctionConstructor);
+    window.Function.prototype.constructor.toString = oldFunctionConstructor.toString.bind(oldFunctionConstructor);
+
+    var oldFunction = Function;
+    window.Function = Closure(oldFunction)
+    //fix native function
+    window.Function.toString = oldFunction.toString.bind(oldFunction);
 
     var oldEval = eval;
-    eval = Closure(oldEval)
+    window.eval = Closure(oldEval)
     //fix native function
-    eval.toString = oldEval.toString.bind(oldEval);
+    window.eval.toString = oldEval.toString.bind(oldEval);
 
 
     // hook GeneratorFunction
@@ -43,6 +50,25 @@ function core(e) {
       value: newAsyncFunctionConstructor,
       writable: false,
       configurable: true
+    })
+
+    // hook dom
+    var oldSetAttribute = window.Element.prototype.setAttribute;
+    window.Element.prototype.setAttribute = function (name, value) {
+      if(typeof value == "string")value = value.replace(/debugger/g, "")
+      // 向上调用
+      oldSetAttribute.call(this,name,value)
+    };
+    var oldContentWindow = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype,"contentWindow").get
+    Object.defineProperty(window.HTMLIFrameElement.prototype,"contentWindow",{
+      get(){
+        var newV = oldContentWindow.call(this)
+        if(!newV.inject){
+          newV.inject = true;
+          core.call(newV, globalConfig,newV);
+        }
+        return newV
+      }
     })
 
   }
@@ -90,7 +116,7 @@ function core(e) {
 
 }
 chrome.storage.sync.get(["config-hook-console", "config-hook-debugger", "config-hook-regExp", "config-hook-pushState"], function (result) {
-  script.text = `(${core.toString()})(${JSON.stringify(result)})`;
+  script.text = `(${core.toString()})(${JSON.stringify(result)},window)`;
   script.onload = () => {
     script.parentNode.removeChild(script);
   };

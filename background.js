@@ -51,11 +51,20 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
             await sendCommand("Page.enable", {}, {
               targetId: params.frameId
             });
+            await sendCommand("Debugger.enable", {},{
+              targetId: params.frameId
+            });
           })
 
           frameList.delete(params.frameId)
         }
 
+        break
+      case "Debugger.scriptParsed":
+        if(!params.isLiveEdit){
+          var res = await sendCommand("Debugger.getScriptSource", {scriptId: params.scriptId}, source);
+          console.log("getScriptSource",params.scriptId,res)
+        }
         break
       case "Fetch.requestPaused":
         console.log("xmFetch","Fetch.requestPaused",params.request.url)
@@ -142,7 +151,8 @@ function toggleAttachDebugger() {
             resourceType: "Script"
           }]
         },tab);
-        sendCommand("Page.enable", {},tab);
+        await sendCommand("Page.enable", {},tab);
+        await sendCommand("Debugger.enable", {},tab);
         worker.addEventListener("message", onWorkerMessage)
       });
     }

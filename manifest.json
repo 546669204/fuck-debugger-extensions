@@ -26,7 +26,5 @@
       "description": "Attach"
     }
   },
-  "manifest_version": 2,
-  "content_security_policy":"script-src 'self' 'unsafe-inline' 'sha256-4r8oXYfLSiOiBjDTYqivYfVGF6kfXs0MRKRcODSrCG0='; object-src 'self'"
-
+  "manifest_version": 2
 }
